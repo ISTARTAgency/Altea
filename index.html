@@ -108,7 +108,60 @@ textarea.fallback{width:100%;min-height:160px;font:14px var(--body);border-radiu
   .phase .when{font-size:14pt}
   .phase li{font-size:11pt}
   .print-only{display:block;font-size:9pt;color:var(--muted)}
+  .badge-zone,.listen,.j1-progress,#confetti,#loading{display:none!important}
+  .phase .check input{display:none}
+  .phase .check{padding-left:0}
 }
+
+/* ---------- effets Waouh ---------- */
+/* écran de préparation */
+#loading{align-items:flex-start;justify-content:center;min-height:55vh;gap:16px}
+#loading h2{font-size:24px}
+.loadbar{width:100%;height:8px;border-radius:4px;background:var(--edge);overflow:hidden}
+.loadbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--sun));animation:fill 1.9s cubic-bezier(.65,0,.35,1) forwards}
+@keyframes fill{to{width:100%}}
+.loadsteps{font-size:15px;color:var(--muted);min-height:1.5em}
+/* message qui s'écrit */
+.welcome .w{opacity:0;transition:opacity .2s}
+.welcome .w.on{opacity:1}
+/* blocs qui glissent */
+.phase.rise{opacity:0;transform:translateY(16px);animation:rise .6s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+/* écouter */
+.listen{display:flex;gap:10px}
+.listen .btn{font-size:15px;padding:13px 14px}
+/* badge 3D */
+.badge-zone{display:flex;flex-direction:column;align-items:center;gap:10px}
+.badge-zone small{color:var(--muted);font-size:13px}
+.badge{width:min(300px,100%);aspect-ratio:5/6.4;perspective:1000px;cursor:pointer;border:0;padding:0;background:none}
+.badge-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.3,1.3,.5,1)}
+.badge.flipped .badge-inner{transform:rotateY(180deg)}
+.badge-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px;overflow:hidden;box-shadow:0 18px 40px rgba(14,107,102,.28);display:flex;flex-direction:column;text-align:left}
+.badge-front{background:var(--teal);color:#fff}
+.badge-front .slot{width:56px;height:9px;border-radius:5px;background:rgba(255,255,255,.35);margin:14px auto 0}
+.badge-front .top{padding:18px 20px 0;display:flex;justify-content:space-between;align-items:baseline}
+.badge-front .blogo{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.03em}
+.badge-front .blogo span{color:var(--sun)}
+.badge-front .kind{font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.badge-front .mid{margin-top:auto;padding:0 20px}
+.badge-front .bname{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;letter-spacing:-.02em;overflow-wrap:anywhere}
+.badge-front .brole{font-size:15px;margin-top:8px;opacity:.92}
+.badge-front .foot{margin-top:18px;background:var(--sun);color:var(--ink);padding:12px 20px;display:flex;justify-content:space-between;font-weight:600;font-size:14px}
+.badge-back{background:var(--card);color:var(--ink);transform:rotateY(180deg);padding:22px 20px;gap:10px;border:1px solid var(--edge)}
+.badge-back h3{color:var(--teal);font-size:20px}
+.badge-back ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.badge-back .hint{margin-top:auto;font-size:12px;color:var(--muted)}
+.shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-120%);animation:shine 2.6s ease 1.2s 1}
+@keyframes shine{to{transform:translateX(120%)}}
+/* checklist jour 1 */
+.check{list-style:none;margin-left:-20px}
+.check label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{width:22px;height:22px;flex:none;margin-top:1px;accent-color:var(--teal)}
+.check input:checked+span{text-decoration:line-through;color:var(--muted)}
+.j1-progress{font-size:13px;color:var(--muted);margin:10px 0 0}
+.j1-progress b{color:var(--teal)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+@media (prefers-reduced-motion:reduce){.badge-inner,.phase.rise,.loadbar i,.shine{animation:none!important;transition:none!important}.phase.rise{opacity:1;transform:none}.loadbar i{width:100%}}
 </style>
 </head>
 <body>
@@ -141,9 +194,37 @@ textarea.fallback{width:100%;min-height:160px;font:14px var(--body);border-radiu
     </div>
   </section>
 
+  <!-- préparation -->
+  <section class="screen" id="loading" hidden aria-live="polite">
+    <h2>Altéa prépare votre plan…</h2>
+    <div class="loadbar"><i></i></div>
+    <p class="loadsteps" id="loadsteps"></p>
+  </section>
+
   <!-- plan -->
   <section class="screen" id="result" hidden>
     <div class="welcome" id="welcome"></div>
+    <div class="listen" id="listenRow" hidden><button class="btn ghost" id="listen">Écouter mon message</button></div>
+    <div class="badge-zone">
+      <button class="badge" id="badge" aria-label="Votre badge Altéa, touchez pour le retourner">
+        <div class="badge-inner">
+          <div class="badge-face badge-front">
+            <div class="slot"></div>
+            <div class="top"><div class="blogo">altéa<span>.</span></div><div class="kind">Nouvel arrivant</div></div>
+            <div class="mid"><div class="bname" id="bName"></div><div class="brole" id="bRole"></div></div>
+            <div class="foot"><span>Arrivée : lundi</span><span id="bContrat"></span></div>
+            <div class="shine"></div>
+          </div>
+          <div class="badge-face badge-back">
+            <h3>Votre lundi en 3 temps</h3>
+            <ol id="bBack"></ol>
+            <p class="hint">Touchez pour retourner le badge</p>
+          </div>
+        </div>
+      </button>
+      <small>Votre badge : touchez-le pour le retourner</small>
+      <button class="btn ghost" id="saveBadge" style="width:auto;padding-inline:18px">Enregistrer mon badge en image</button>
+    </div>
     <p class="profile" id="profileLine"></p>
     <div id="phases" style="display:flex;flex-direction:column;gap:14px"></div>
     <p class="note">Plan indicatif préparé pour votre arrivée. Votre manager l'ajustera avec vous dès le premier jour.</p>
@@ -160,6 +241,7 @@ textarea.fallback{width:100%;min-height:160px;font:14px var(--body);border-radiu
     <button class="btn ghost" id="restart">Recommencer avec un autre profil</button>
   </section>
 </main>
+<canvas id="confetti" aria-hidden="true"></canvas>
 
 <script>
 (function(){
@@ -246,11 +328,11 @@ var C={
 var A={},i=0;
 
 function cleanName(s){
-  s=String(s||"").replace(/[<>{}]/g,"").replace(/\s+/g," ").trim().slice(0,30);
+  s=String(s||"").replace(/[<>{}]/g,"").replace(/\s+/g," ").trim().slice(0,40);
   return s.split(/([ -])/).map(function(p){return p.length>1||/[^ -]/.test(p)?p.charAt(0).toLocaleUpperCase("fr-FR")+p.slice(1):p;}).join("");
 }
 
-function show(id){["home","quiz","result"].forEach(function(s){$(s).hidden=s!==id;});window.scrollTo(0,0);}
+function show(id){["home","quiz","loading","result"].forEach(function(s){$(s).hidden=s!==id;});window.scrollTo(0,0);}
 
 function renderQ(){
   var q=Q[i];
@@ -260,7 +342,7 @@ function renderQ(){
   $("err").textContent="";
   var body=$("qBody");body.innerHTML="";
   if(q.type==="text"){
-    var inp=document.createElement("input");inp.type="text";inp.id="q-prenom";inp.maxLength=30;inp.autocomplete="off";inp.placeholder="Votre prénom";inp.value=A.prenom||"";
+    var inp=document.createElement("input");inp.type="text";inp.id="q-prenom";inp.maxLength=40;inp.autocomplete="off";inp.placeholder="Votre prénom";inp.value=A.prenom||"";
     inp.setAttribute("aria-label","Votre prénom");
     inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();next();}});
     body.appendChild(inp);setTimeout(function(){inp.focus();},50);
@@ -271,7 +353,7 @@ function renderQ(){
       b.setAttribute("aria-pressed",A[q.key]===o[0]?"true":"false");
       b.textContent=o[1];
       if(o[2]){var s=document.createElement("span");s.textContent=o[2];b.appendChild(s);}
-      b.addEventListener("click",function(){A[q.key]=o[0];wrap.querySelectorAll(".opt").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});setTimeout(next,180);});
+      b.addEventListener("click",function(){A[q.key]=o[0];wrap.querySelectorAll(".opt").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});buzz(15);setTimeout(next,180);});
       wrap.appendChild(b);
     });
     body.appendChild(wrap);
@@ -287,7 +369,7 @@ function next(){
     if(v.length<2||!/[A-Za-zÀ-ÿ]/.test(v)){$("err").textContent="Indiquez votre prénom (2 lettres minimum).";return;}
     A.prenom=v;
   }else if(!A[q.key]){$("err").textContent="Choisissez une réponse pour continuer.";return;}
-  if(i<Q.length-1){i++;renderQ();}else{renderPlan();}
+  if(i<Q.length-1){i++;renderQ();}else{prepare();}
 }
 
 /* ---------- génération du plan ---------- */
@@ -323,33 +405,150 @@ function build(a){
 
 function el(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n;}
 
-var lastText="";
+var lastText="",timers=[],reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+var SHORT={tech:"Technique et terrain",client:"Relation client",support:"Fonctions support",autre:"Nouveau métier",cdi:"CDI / CDD",alt:"Alternance",stage:"Stage",interim:"Intérim"};
+function later(fn,ms){timers.push(setTimeout(fn,ms));}
+function clearTimers(){timers.forEach(clearTimeout);timers=[];try{speechSynthesis.cancel();}catch(e){}}
+function buzz(ms){try{if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+
+/* écran « Altéa prépare votre plan… » puis plan */
+function prepare(){
+  clearTimers();
+  show("loading");
+  var steps=["Lecture de votre profil…","Choix de vos étapes Jour 1, Semaine 1, Jour 30…","Rédaction de votre message de bienvenue…"];
+  var ls=$("loadsteps");ls.textContent=steps[0];
+  var bar=document.querySelector(".loadbar i");bar.style.animation="none";void bar.offsetWidth;bar.style.animation="";
+  if(reduce){renderPlan();return;}
+  later(function(){ls.textContent=steps[1];},650);
+  later(function(){ls.textContent=steps[2];},1300);
+  later(renderPlan,1950);
+}
+
 function renderPlan(){
+  clearTimers();
   var plan=build(A);
+  /* message qui s'écrit mot à mot */
   var w=$("welcome");w.innerHTML="";
   w.appendChild(el("h2",null,plan.titre));
-  plan.msg.forEach(function(t){w.appendChild(el("p",null,t));});
-  w.appendChild(el("p","sign","L'équipe Altéa"));
+  var words=[];
+  plan.msg.concat(["L'équipe Altéa"]).forEach(function(t,k){
+    var p=el("p",k===plan.msg.length?"sign":null);
+    t.split(" ").forEach(function(word,j){if(j)p.appendChild(document.createTextNode(" "));var s=el("span","w",word);p.appendChild(s);words.push(s);});
+    w.appendChild(p);
+  });
+  var step=reduce?0:38;
+  words.forEach(function(s,k){if(!step){s.classList.add("on");}else later(function(){s.classList.add("on");},200+k*step);});
+  var after=reduce?0:200+words.length*step;
+  /* badge */
+  $("bName").textContent=A.prenom;
+  $("bName").style.fontSize=A.prenom.length>12?"30px":"";
+  $("bRole").textContent=SHORT[A.metier];
+  $("bContrat").textContent=SHORT[A.contrat];
+  var j1=plan.phases[0].items,back=$("bBack");back.innerHTML="";
+  [j1[0],j1[2],j1[j1.length-1]].forEach(function(t){back.appendChild(el("li",null,t));});
+  $("badge").classList.remove("flipped");
   $("profileLine").textContent="Votre profil : "+[LABEL["metier:"+A.metier],LABEL["exp:"+A.exp],LABEL["contrat:"+A.contrat],LABEL["prio:"+A.prio]].join(" · ");
+  /* blocs qui glissent, Jour 1 à cocher */
   var ph=$("phases");ph.innerHTML="";
-  plan.phases.forEach(function(f){
-    var box=el("article","phase");
+  plan.phases.forEach(function(f,n){
+    var box=el("article","phase"+(reduce?"":" rise"));
+    if(!reduce)box.style.animationDelay=(after/1000+n*0.18)+"s";
     var h=el("header");h.appendChild(el("div","when",f.when));h.appendChild(el("div","goal",f.goal));box.appendChild(h);
-    var ul=el("ul");f.items.forEach(function(t){ul.appendChild(el("li",null,t));});box.appendChild(ul);
+    var ul=el("ul");
+    f.items.forEach(function(t,k){
+      if(n===0){
+        var li=el("li","check"),lab=el("label"),cb=document.createElement("input");
+        cb.type="checkbox";cb.id="j1-"+k;cb.addEventListener("change",j1Progress);
+        lab.appendChild(cb);lab.appendChild(el("span",null,t));li.appendChild(lab);ul.appendChild(li);
+      }else ul.appendChild(el("li",null,t));
+    });
+    box.appendChild(ul);
+    if(n===0){var pr=el("p","j1-progress");pr.id="j1prog";box.appendChild(pr);}
     ph.appendChild(box);
   });
+  j1Progress();
   lastText=[plan.titre,"",plan.msg.join(" "),"L'équipe Altéa",""].concat(plan.phases.map(function(f){return f.when.toUpperCase()+" · "+f.goal+"\n"+f.items.map(function(t){return "- "+t;}).join("\n")+"\n";})).join("\n");
+  speakText=plan.titre+" "+plan.msg.join(" ")+" L'équipe Altéa.";
   $("copied").textContent="";$("fallback").hidden=true;
   $("printDate").textContent="Plan d'accueil de "+A.prenom+", créé le "+new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})+". Altéa Services, entreprise fictive.";
   document.title="Plan d'accueil Altéa · "+A.prenom;
+  $("listen").textContent="Écouter mon message";
   show("result");
+  buzz([20,60,20]);
 }
+
+/* checklist du Jour 1 + confettis */
+function j1Progress(){
+  var boxes=document.querySelectorAll("#phases input[type=checkbox]"),done=0;
+  boxes.forEach(function(b){if(b.checked)done++;});
+  var pr=$("j1prog");if(!pr)return;
+  if(done===boxes.length&&done>0){pr.innerHTML="<b>Jour 1 terminé.</b> Bravo, vous êtes prêt pour la suite !";confetti();buzz(80);}
+  else{pr.innerHTML="<b>"+done+"</b> / "+boxes.length+" étapes du Jour 1 cochées";if(done)buzz(12);}
+}
+function confetti(){
+  if(reduce)return;
+  var c=$("confetti"),x=c.getContext("2d"),W=c.width=innerWidth,H=c.height=innerHeight;
+  var cols=["#0e6b66","#f2c14e","#4fb9b0","#ffffff","#16302f"],P=[];
+  for(var k=0;k<140;k++)P.push({x:W/2+(Math.random()-.5)*W*.4,y:H*.35,vx:(Math.random()-.5)*12,vy:-Math.random()*14-4,w:6+Math.random()*7,h:3+Math.random()*5,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[k%cols.length]});
+  var t0=performance.now();
+  (function frame(t){
+    x.clearRect(0,0,W,H);
+    P.forEach(function(p){p.vy+=.38;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.w/2,-p.h/2,p.w,p.h);x.restore();});
+    if(t-t0<2600)requestAnimationFrame(frame);else x.clearRect(0,0,W,H);
+  })(t0);
+}
+
+/* lecture à voix haute */
+var speakText="";
+if("speechSynthesis" in window&&"SpeechSynthesisUtterance" in window){
+  $("listenRow").hidden=false;
+  $("listen").addEventListener("click",function(){
+    var b=this;
+    try{
+      if(speechSynthesis.speaking){speechSynthesis.cancel();b.textContent="Écouter mon message";return;}
+      var u=new SpeechSynthesisUtterance(speakText);u.lang="fr-FR";u.rate=1;
+      var v=speechSynthesis.getVoices().filter(function(v){return /^fr/i.test(v.lang);})[0];if(v)u.voice=v;
+      u.onend=u.onerror=function(){b.textContent="Écouter mon message";};
+      speechSynthesis.speak(u);b.textContent="Arrêter la lecture";
+    }catch(e){b.textContent="Lecture indisponible sur ce téléphone";}
+  });
+}
+
+/* badge : retourner et enregistrer en image */
+$("badge").addEventListener("click",function(){this.classList.toggle("flipped");buzz(10);});
+$("saveBadge").addEventListener("click",function(){
+  var c=document.createElement("canvas"),S=2,Wd=300*S,Ht=384*S;c.width=Wd;c.height=Ht;var x=c.getContext("2d");
+  var disp="'Bricolage Grotesque','Avenir Next','Segoe UI',sans-serif",body="'Figtree','Segoe UI',Roboto,Arial,sans-serif";
+  function rr(X,Y,w,h,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();}
+  rr(0,0,Wd,Ht,36);x.save();x.clip();
+  x.fillStyle="#0e6b66";x.fillRect(0,0,Wd,Ht);
+  x.fillStyle="rgba(255,255,255,.35)";rr(Wd/2-56,28,112,18,9);x.fill();
+  x.fillStyle="#fff";x.font="700 52px "+disp;x.textBaseline="alphabetic";x.fillText("altéa",40,128);
+  var lw=x.measureText("altéa").width;x.fillStyle="#f2c14e";x.fillText(".",40+lw,128);
+  x.fillStyle="rgba(255,255,255,.85)";x.font="600 20px "+body;x.textAlign="right";x.fillText("NOUVEL ARRIVANT",Wd-40,124);x.textAlign="left";
+  var size=80;x.font="700 "+size+"px "+disp;while(x.measureText(A.prenom).width>Wd-80&&size>36){size-=4;x.font="700 "+size+"px "+disp;}
+  x.fillStyle="#fff";x.fillText(A.prenom,40,Ht-190);
+  x.font="500 30px "+body;x.fillStyle="rgba(255,255,255,.92)";x.fillText(SHORT[A.metier],40,Ht-140);
+  x.fillStyle="#f2c14e";x.fillRect(0,Ht-96,Wd,96);
+  x.fillStyle="#16302f";x.font="600 28px "+body;x.fillText("Arrivée : lundi",40,Ht-38);x.textAlign="right";x.fillText(SHORT[A.contrat],Wd-40,Ht-38);
+  x.restore();
+  var name="badge-altea-"+A.prenom.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g,"-")+".png";
+  c.toBlob(function(blob){
+    if(!blob)return;
+    try{
+      var f=new File([blob],name,{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:"Mon badge Altéa"}).catch(function(){});return;}
+    }catch(e){}
+    var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+    $("copied").textContent="Badge enregistré dans vos téléchargements.";
+  },"image/png");
+});
 
 /* ---------- actions ---------- */
 $("start").addEventListener("click",function(){A={};i=0;renderQ();show("quiz");});
 $("next").addEventListener("click",next);
 $("back").addEventListener("click",function(){if(i===0){show("home");}else{i--;renderQ();}});
-$("restart").addEventListener("click",function(){A={};i=0;document.title="Altéa t'accueille";show("home");});
+$("restart").addEventListener("click",function(){clearTimers();A={};i=0;document.title="Altéa t'accueille";show("home");});
 $("pdf").addEventListener("click",function(){
   try{window.print();}catch(e){}
 });
@@ -374,7 +573,7 @@ $("copy").addEventListener("click",function(){
 var chips=$("chips");
 DEMO.forEach(function(d){
   var b=el("button","chip",d.nom+" · "+d.desc);b.type="button";b.id="demo-"+d.nom.toLowerCase();
-  b.addEventListener("click",function(){A=Object.assign({},d.a);renderPlan();});
+  b.addEventListener("click",function(){A=Object.assign({},d.a);prepare();});
   chips.appendChild(b);
 });
 })();
